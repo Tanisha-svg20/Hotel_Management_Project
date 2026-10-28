@@ -1,0 +1,171 @@
+:root {
+  --primary-navy: #0b1329;
+  --primary-slate: #1e293b;
+  --accent-gold: #c59b27;
+  --accent-gold-light: #fef9ee;
+  --accent-gold-hover: #b0891e;
+  --text-dark: #0f172a;
+  --text-muted: #64748b;
+  --bg-light: #f8fafc;
+  --bg-card: #ffffff;
+  --border-color: #e2e8f0;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-luxury: 0 20px 25px -5px rgba(11, 19, 41, 0.08), 0 8px 10px -6px rgba(11, 19, 41, 0.04);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .luxury-heading {
+  font-family: var(--font-serif);
+  color: var(--primary-navy);
+  letter-spacing: -0.01em;
+}
+
+/* Custom Luxury Buttons */
+.btn-gold {
+  background-color: var(--accent-gold);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-gold:hover {
+  background-color: var(--accent-gold-hover);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(197, 155, 39, 0.35);
+}
+
+.btn-navy {
+  background-color: var(--primary-navy);
+  color: #ffffff;
+  font-weight: 600;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 6px;
+  transition: all 0.2s ease-in-out;
+}
+
+.btn-navy:hover {
+  background-color: var(--primary-slate);
+  color: #ffffff;
+}
+
+.btn-outline-gold {
+  background: transparent;
+  color: var(--accent-gold);
+  border: 1.5px solid var(--accent-gold);
+  font-weight: 600;
+  padding: 0.6rem 1.3rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-gold:hover {
+  background-color: var(--accent-gold);
+  color: #ffffff;
+}
+
+/* Luxury Cards */
+.luxury-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.luxury-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-luxury);
+}
+
+/* Badges */
+.badge-status {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 20px;
+}
+
+.badge-confirmed {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-checked-in {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-checked-out {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.badge-cancelled {
+  background-color: #ffe4e6;
+  color: #be123c;
+}
+
+.badge-cleaning {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.badge-available {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.badge-occupied {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-maintenance {
+  background-color: #f3e8ff;
+  color: #7e22ce;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  padding: 0.65rem 0.9rem;
+  font-size: 0.95rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(197, 155, 39, 0.15);
+}
+
+/* Nav tabs */
+.nav-pills .nav-link.active {
+  background-color: var(--primary-navy);
+  color: #ffffff;
+}
+
+.nav-pills .nav-link {
+  color: var(--text-dark);
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+}
