@@ -35,3 +35,4 @@ const calculateBookingPrice = (nightlyRate, fromDate, toDate) => {
 module.exports = {
   calculateBookingPrice
 };
+

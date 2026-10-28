@@ -166,3 +166,4 @@ npm test
 - **Safe Public Registration**: Self-registration enforces the `customer` role on the server, preventing privilege escalation.
 - **PCI-DSS Compliance Principle**: Raw card details or CVVs are never saved on the server.
 - **Referential Integrity**: Rooms with active reservations cannot be deleted, safeguarding guest history.
+

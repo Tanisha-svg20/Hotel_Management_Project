@@ -153,3 +153,4 @@ const RoomsPage = () => {
 };
 
 export default RoomsPage;
+

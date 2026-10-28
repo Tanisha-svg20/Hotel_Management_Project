@@ -21,3 +21,4 @@ router.patch('/users/:id/role', updateUserRole);
 router.get('/reports', getReports);
 
 module.exports = router;
+

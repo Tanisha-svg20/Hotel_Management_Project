@@ -21,7 +21,7 @@ const BookingModal = ({ room, isOpen, onClose, onBookingSuccess }) => {
   const [guestPhone, setGuestPhone] = useState('');
   const [guestCount, setGuestCount] = useState(1);
   const [specialRequests, setSpecialRequests] = useState('');
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
+  const [cardOption, setCardOption] = useState('4242');
   const [loading, setLoading] = useState(false);
   const [confirmedBooking, setConfirmedBooking] = useState(null);
 
@@ -75,7 +75,8 @@ const BookingModal = ({ room, isOpen, onClose, onBookingSuccess }) => {
         guestPhone,
         guestCount,
         specialRequests,
-        cardLast4: '4242'
+        cardLast4: cardOption,
+        simulateFailure: cardOption === '0000'
       };
 
       const res = await api.post('/bookings', payload);
@@ -254,22 +255,26 @@ const BookingModal = ({ room, isOpen, onClose, onBookingSuccess }) => {
                         </li>
                       </ul>
 
-                      {/* Payment Adapter Notice */}
+                      {/* Payment Adapter Notice & Test Cards */}
                       <div className="bg-white p-3 rounded-2 border mb-3">
                         <div className="d-flex align-items-center gap-2 mb-2 text-primary small fw-bold">
                           <ShieldCheck size={18} />
-                          <span>Secure Payment Processing</span>
+                          <span>Payment Simulation & Gateways</span>
                         </div>
-                        <div className="d-flex align-items-center gap-2 text-muted small mb-2">
-                          <CreditCard size={16} />
-                          <span>Development Payment Adapter: Mock Card (Visa ending in 4242)</span>
-                        </div>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm bg-light"
-                          value={cardNumber}
-                          disabled
-                        />
+                        <label className="form-label small text-muted mb-1">Select Payment Scenario:</label>
+                        <select
+                          className="form-select form-select-sm mb-2"
+                          value={cardOption}
+                          onChange={(e) => setCardOption(e.target.value)}
+                        >
+                          <option value="4242">Approved Test Visa (Ending in 4242) — Successful</option>
+                          <option value="0000">Declined Test Card (Ending in 0000) — Simulate Failure</option>
+                        </select>
+                        <small className="text-muted d-block" style={{ fontSize: '11px' }}>
+                          {cardOption === '4242'
+                            ? '✓ Will authorize and confirm reservation.'
+                            : '✗ Will simulate card decline and test failure handling.'}
+                        </small>
                       </div>
 
                       <button
@@ -299,3 +304,4 @@ const BookingModal = ({ room, isOpen, onClose, onBookingSuccess }) => {
 };
 
 export default BookingModal;
+

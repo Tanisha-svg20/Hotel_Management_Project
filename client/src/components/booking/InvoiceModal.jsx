@@ -134,3 +134,4 @@ const InvoiceModal = ({ booking, isOpen, onClose }) => {
 };
 
 export default InvoiceModal;
+

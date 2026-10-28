@@ -298,3 +298,4 @@ module.exports = {
   updateUserRole,
   getReports
 };
+

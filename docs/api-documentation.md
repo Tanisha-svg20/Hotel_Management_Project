@@ -90,3 +90,4 @@ Errors return:
 | `GET` | `/api/staff/services` | Staff / Admin | List open housekeeping and guest service requests. |
 | `POST` | `/api/staff/services` | Staff / Admin / Guest | Create a new service request. |
 | `PATCH`| `/api/staff/services/:id/status` | Staff / Admin | Update service request status (`pending`, `in_progress`, `resolved`). |
+

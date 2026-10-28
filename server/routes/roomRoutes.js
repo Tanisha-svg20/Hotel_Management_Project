@@ -22,3 +22,4 @@ router.put('/:id', verifyToken, requireRole('admin'), upload.array('photos', 5),
 router.delete('/:id', verifyToken, requireRole('admin'), deleteRoom);
 
 module.exports = router;
+

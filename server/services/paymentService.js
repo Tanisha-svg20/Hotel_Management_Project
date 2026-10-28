@@ -17,7 +17,16 @@ if (provider === 'stripe' && stripeSecretKey) {
 /**
  * Creates a payment order/session or dev token
  */
-const createPaymentIntent = async ({ amount, currency = 'USD', bookingReference, customerEmail }) => {
+const createPaymentIntent = async ({ amount, currency = 'USD', bookingReference, customerEmail, simulateFailure = false }) => {
+  if (simulateFailure) {
+    return {
+      success: false,
+      provider: 'dev_adapter',
+      message: 'Payment simulation error: Card declined by issuing bank.',
+      code: 'card_declined'
+    };
+  }
+
   if (stripeInstance) {
     try {
       const intent = await stripeInstance.paymentIntents.create({
@@ -29,6 +38,7 @@ const createPaymentIntent = async ({ amount, currency = 'USD', bookingReference,
         }
       });
       return {
+        success: true,
         provider: 'stripe',
         clientSecret: intent.client_secret,
         transactionId: intent.id,
@@ -36,13 +46,19 @@ const createPaymentIntent = async ({ amount, currency = 'USD', bookingReference,
       };
     } catch (err) {
       console.error('[PaymentService] Stripe error:', err.message);
-      throw new Error(`Payment gateway error: ${err.message}`);
+      return {
+        success: false,
+        provider: 'stripe',
+        message: `Stripe error: ${err.message}`,
+        code: 'gateway_error'
+      };
     }
   }
 
   // Development Adapter
   const devTransactionId = `DEV-TX-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
   return {
+    success: true,
     provider: 'dev_adapter',
     clientSecret: `dev_secret_${Date.now()}`,
     transactionId: devTransactionId,
@@ -59,12 +75,23 @@ const verifyAndRecordPayment = async ({
   userId,
   amount,
   transactionId,
-  cardLast4 = '4242'
+  cardLast4 = '4242',
+  simulateFailure = false
 }) => {
+  // Check for intentional test failure (e.g. card ending in 0000 or simulateFailure true)
+  if (simulateFailure || cardLast4 === '0000') {
+    return {
+      success: false,
+      message: 'Card was declined. Insufficient funds or card expired.',
+      code: 'card_declined'
+    };
+  }
+
   // Check idempotency: does this transaction already exist?
   let existingPayment = await Payment.findOne({ transactionId });
   if (existingPayment) {
     return {
+      success: true,
       payment: existingPayment,
       isIdempotentRepeat: true
     };
@@ -86,6 +113,7 @@ const verifyAndRecordPayment = async ({
   });
 
   return {
+    success: true,
     payment,
     isIdempotentRepeat: false
   };

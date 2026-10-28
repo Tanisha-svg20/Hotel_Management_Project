@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import {
   ShieldCheck, LayoutDashboard, Calendar, BedDouble, PlusCircle,
-  Users, BarChart3, RefreshCw, Trash2, Edit, CheckCircle2, XCircle
+  Users, BarChart3, RefreshCw, Trash2, Edit, CheckCircle2, XCircle, Upload, X
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import {
@@ -46,7 +46,12 @@ const AdminDashboard = () => {
     amenities: 'High-speed Wi-Fi, Smart TV, Air Conditioning, Room Service',
     photoUrl: ''
   });
+  const [roomFile, setRoomFile] = useState(null);
   const [submittingRoom, setSubmittingRoom] = useState(false);
+
+  // Edit Room Modal State
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchAdminData = async () => {
     setLoading(true);
@@ -98,7 +103,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Create Room
+  // Create Room (with Multipart File Upload or URL)
   const handleCreateRoom = async (e) => {
     e.preventDefault();
     if (!newRoom.roomNumber || !newRoom.rent || !newRoom.description) {
@@ -108,14 +113,31 @@ const AdminDashboard = () => {
 
     setSubmittingRoom(true);
     try {
-      const payload = {
-        ...newRoom,
-        rent: Number(newRoom.rent),
-        capacity: Number(newRoom.capacity),
-        photos: newRoom.photoUrl ? [newRoom.photoUrl] : undefined
-      };
+      let res;
+      if (roomFile) {
+        // Use Multipart FormData for real Multer file upload
+        const formData = new FormData();
+        formData.append('roomNumber', newRoom.roomNumber);
+        formData.append('type', newRoom.type);
+        formData.append('description', newRoom.description);
+        formData.append('rent', newRoom.rent);
+        formData.append('capacity', newRoom.capacity);
+        formData.append('amenities', newRoom.amenities);
+        formData.append('photos', roomFile);
 
-      const res = await api.post('/rooms', payload);
+        res = await api.post('/rooms', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        const payload = {
+          ...newRoom,
+          rent: Number(newRoom.rent),
+          capacity: Number(newRoom.capacity),
+          photos: newRoom.photoUrl ? [newRoom.photoUrl] : undefined
+        };
+        res = await api.post('/rooms', payload);
+      }
+
       toast.success(res.data.message);
       setNewRoom({
         roomNumber: '',
@@ -126,12 +148,45 @@ const AdminDashboard = () => {
         amenities: 'High-speed Wi-Fi, Smart TV, Air Conditioning, Room Service',
         photoUrl: ''
       });
+      setRoomFile(null);
       setActiveTab('rooms');
       fetchAdminData();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to create room.');
     } finally {
       setSubmittingRoom(false);
+    }
+  };
+
+  // Edit Room Modal handler
+  const openEditModal = (room) => {
+    setEditingRoom({
+      ...room,
+      amenitiesStr: Array.isArray(room.amenities) ? room.amenities.join(', ') : room.amenities
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditRoom = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        roomNumber: editingRoom.roomNumber,
+        type: editingRoom.type,
+        rent: Number(editingRoom.rent),
+        capacity: Number(editingRoom.capacity),
+        description: editingRoom.description,
+        operationalStatus: editingRoom.operationalStatus,
+        amenities: editingRoom.amenitiesStr.split(',').map(s => s.trim()).filter(Boolean)
+      };
+
+      const res = await api.put(`/rooms/${editingRoom._id}`, payload);
+      toast.success(res.data.message);
+      setIsEditModalOpen(false);
+      setEditingRoom(null);
+      fetchAdminData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update room.');
     }
   };
 
@@ -401,14 +456,24 @@ const AdminDashboard = () => {
                       </td>
                       <td>{room.count || 1} Unit(s)</td>
                       <td className="text-end">
-                        <button
-                          onClick={() => handleDeleteRoom(room._id)}
-                          className="btn btn-outline-danger btn-sm p-1 px-2"
-                          title="Deactivate Room"
-                        >
-                          <Trash2 size={14} className="me-1 inline" />
-                          <span className="small">Deactivate</span>
-                        </button>
+                        <div className="d-flex justify-content-end gap-1">
+                          <button
+                            onClick={() => openEditModal(room)}
+                            className="btn btn-outline-primary btn-sm p-1 px-2"
+                            title="Edit Room"
+                          >
+                            <Edit size={14} className="me-1 inline" />
+                            <span className="small">Edit</span>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRoom(room._id)}
+                            className="btn btn-outline-danger btn-sm p-1 px-2"
+                            title="Deactivate Room"
+                          >
+                            <Trash2 size={14} className="me-1 inline" />
+                            <span className="small">Deactivate</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -477,8 +542,18 @@ const AdminDashboard = () => {
                     onChange={(e) => setNewRoom({ ...newRoom, capacity: Number(e.target.value) })}
                   />
                 </div>
-                <div className="col-md-8">
-                  <label className="form-label small fw-semibold">Photo Image URL (or Unsplash asset)</label>
+                <div className="col-md-4">
+                  <label className="form-label small fw-semibold">Upload Photo File (Multer)</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="form-control"
+                    onChange={(e) => setRoomFile(e.target.files[0])}
+                  />
+                  <small className="text-muted">JPG, PNG, WEBP (Max 5MB)</small>
+                </div>
+                <div className="col-md-4">
+                  <label className="form-label small fw-semibold">Or Image URL</label>
                   <input
                     type="url"
                     className="form-control"
@@ -608,6 +683,123 @@ const AdminDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* EDIT ROOM MODAL */}
+      {isEditModalOpen && editingRoom && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(11, 19, 41, 0.75)', zIndex: 1055 }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg rounded-3">
+              <div className="modal-header bg-dark text-white p-3 px-4">
+                <h5 className="modal-title fw-bold">Edit Room #{editingRoom.roomNumber}</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setIsEditModalOpen(false)}
+                ></button>
+              </div>
+              <form onSubmit={handleSaveEditRoom}>
+                <div className="modal-body p-4">
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Room Number</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={editingRoom.roomNumber}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, roomNumber: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Room Type</label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={editingRoom.type}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, type: e.target.value })}
+                      >
+                        <option value="Single">Single</option>
+                        <option value="Double">Double</option>
+                        <option value="Deluxe">Deluxe</option>
+                        <option value="Suite">Suite</option>
+                        <option value="Family Suite">Family Suite</option>
+                        <option value="Presidential Suite">Presidential Suite</option>
+                      </select>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Nightly Rent ($ USD)</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        value={editingRoom.rent}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, rent: e.target.value })}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Max Guests</label>
+                      <input
+                        type="number"
+                        className="form-control form-control-sm"
+                        value={editingRoom.capacity}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, capacity: Number(e.target.value) })}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Operational Status</label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={editingRoom.operationalStatus}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, operationalStatus: e.target.value })}
+                      >
+                        <option value="available">Available</option>
+                        <option value="cleaning">Cleaning</option>
+                        <option value="occupied">Occupied</option>
+                        <option value="maintenance">Maintenance</option>
+                      </select>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label small fw-semibold">Amenities (Comma separated)</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={editingRoom.amenitiesStr}
+                        onChange={(e) => setEditingRoom({ ...editingRoom, amenitiesStr: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold">Description</label>
+                    <textarea
+                      className="form-control form-control-sm"
+                      rows="3"
+                      value={editingRoom.description}
+                      onChange={(e) => setEditingRoom({ ...editingRoom, description: e.target.value })}
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+                <div className="modal-footer bg-light p-3">
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setIsEditModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-navy btn-sm px-4">
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

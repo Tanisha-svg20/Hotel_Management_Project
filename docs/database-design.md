@@ -161,3 +161,4 @@ erDiagram
 - `status`: String, enum: `['pending', 'in_progress', 'resolved']`, default: `'pending'`
 - `notes`: String
 - `timestamps`: true
+

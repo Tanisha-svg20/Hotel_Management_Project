@@ -49,15 +49,23 @@ const createBooking = async (req, res, next) => {
       });
     }
 
-    // 2. Authoritative price calculation (Client submitted total is ignored)
+    // 3. Authoritative price calculation (Client submitted total is ignored)
     const pricing = calculateBookingPrice(room.rent, fromdate, todate);
 
-    // 3. Generate unique booking reference
-    const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // 4. Verify payment authorization prior to creating reservation
+    if (Boolean(req.body.simulateFailure) || cardLast4 === '0000') {
+      return res.status(402).json({
+        success: false,
+        message: 'Payment failed: Card was declined by issuing bank (Test Card Ending in 0000). The reservation was not confirmed.',
+        code: 'card_declined'
+      });
+    }
+
+    // 5. Generate unique booking reference and create booking
     const randomHex = crypto.randomBytes(3).toString('hex').toUpperCase();
+    const dateStamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const bookingId = `HP-BK-${dateStamp}-${randomHex}`;
 
-    // 4. Save booking
     const booking = await Booking.create({
       bookingId,
       user: req.user._id,
@@ -76,7 +84,7 @@ const createBooking = async (req, res, next) => {
       paymentStatus: 'paid'
     });
 
-    // 5. Record verified payment
+    // 6. Record verified payment
     const paymentTx = transactionId || `TX-${Date.now()}-${randomHex}`;
     await verifyAndRecordPayment({
       bookingId: booking._id,
@@ -86,7 +94,7 @@ const createBooking = async (req, res, next) => {
       cardLast4: cardLast4 || '4242'
     });
 
-    // 6. Create in-app notification
+    // 7. Create in-app notification
     await Notification.create({
       user: req.user._id,
       title: 'Booking Confirmed!',
@@ -95,7 +103,7 @@ const createBooking = async (req, res, next) => {
       link: `/customer/bookings/${booking._id}`
     });
 
-    // 7. Send asynchronous email confirmation
+    // 8. Send asynchronous email confirmation
     sendBookingConfirmation(booking, room, req.user).catch(err => {
       console.warn('[BookingController] Email dispatch warning:', err.message);
     });
@@ -246,3 +254,4 @@ module.exports = {
   getBookingById,
   cancelBooking
 };
+

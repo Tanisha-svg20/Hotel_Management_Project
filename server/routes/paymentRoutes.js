@@ -7,3 +7,4 @@ router.post('/create-intent', verifyToken, initiatePayment);
 router.get('/receipt/:bookingId', verifyToken, getReceipt);
 
 module.exports = router;
+

@@ -226,3 +226,4 @@ const RoomDetailsPage = () => {
 };
 
 export default RoomDetailsPage;
+

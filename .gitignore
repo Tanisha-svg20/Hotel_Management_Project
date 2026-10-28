@@ -43,3 +43,4 @@ Thumbs.db
 # Uploads
 server/uploads/*
 !server/uploads/.gitkeep
+

@@ -125,3 +125,4 @@ const SearchFilter = ({ onSearch, initialValues = {} }) => {
 };
 
 export default SearchFilter;
+

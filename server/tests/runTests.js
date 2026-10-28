@@ -218,6 +218,30 @@ const runTestSuite = async () => {
     // -------------------------------------------------------------------------
     // 5. Booking Creation & Overlapping Prevention
     // -------------------------------------------------------------------------
+    await test('Failed payment flow rejects booking with 402 and creates no reservation', async () => {
+      const res = await request(app)
+        .post('/api/bookings')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({
+          roomId: testRoomId,
+          fromdate: '2026-11-20',
+          todate: '2026-11-23',
+          guestName: 'Declined Guest',
+          guestEmail: 'declined@example.com',
+          guestPhone: '+1 555-0000',
+          cardLast4: '0000', // Declining card simulation
+          simulateFailure: true
+        });
+
+      assert.strictEqual(res.status, 402);
+      assert.strictEqual(res.body.success, false);
+      assert.strictEqual(res.body.code, 'card_declined');
+
+      // Verify no booking was created for these dates
+      const unconfirmedBooking = await Booking.findOne({ guestEmail: 'declined@example.com' });
+      assert.strictEqual(unconfirmedBooking, null);
+    });
+
     await test('Customer creates booking for Nov 10 to Nov 14', async () => {
       const res = await request(app)
         .post('/api/bookings')
@@ -341,6 +365,98 @@ const runTestSuite = async () => {
       assert.strictEqual(res.body.data.role, 'staff');
     });
 
+    // -------------------------------------------------------------------------
+    // 9. Profile, Image Uploads & Notifications
+    // -------------------------------------------------------------------------
+    await test('Customer can update their profile information', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ name: 'Jonathan Miller Updated', phone: '+1 555-9988' });
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.data.user.name, 'Jonathan Miller Updated');
+      assert.strictEqual(res.body.data.user.phone, '+1 555-9988');
+    });
+
+    await test('Admin can edit room details via PUT /api/rooms/:id', async () => {
+      const res = await request(app)
+        .put(`/api/rooms/${testRoomId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ rent: 250, description: 'Updated luxury description' });
+
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.body.data.rent, 250);
+      assert.strictEqual(res.body.data.description, 'Updated luxury description');
+    });
+
+    await test('Admin can upload room photos using Multer multipart/form-data', async () => {
+      const fakeImage = Buffer.from('fake-image-binary-data');
+      const res = await request(app)
+        .post('/api/rooms')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .field('roomNumber', '777')
+        .field('type', 'Suite')
+        .field('rent', '350')
+        .field('capacity', '3')
+        .field('description', 'Penthouse suite with uploaded photo gallery.')
+        .attach('photos', fakeImage, 'suite-photo.jpg');
+
+      assert.strictEqual(res.status, 201);
+      assert.ok(res.body.data.photos.length > 0);
+      assert.ok(res.body.data.photos[0].startsWith('/uploads/'));
+    });
+
+    await test('Customer receives notifications and can mark them as read', async () => {
+      const getRes = await request(app)
+        .get('/api/notifications')
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      assert.strictEqual(getRes.status, 200);
+      assert.ok(Array.isArray(getRes.body.data));
+      assert.ok(getRes.body.data.length > 0);
+
+      const notifId = getRes.body.data[0]._id;
+      const readRes = await request(app)
+        .patch(`/api/notifications/${notifId}/read`)
+        .set('Authorization', `Bearer ${customerToken}`);
+
+      assert.strictEqual(readRes.status, 200);
+      assert.strictEqual(readRes.body.data.isRead, true);
+    });
+
+    await test('Customer cannot cancel another guest booking (403 Forbidden)', async () => {
+      // Create another customer and booking
+      const otherUser = await User.create({
+        name: 'Other Guest',
+        email: 'other.guest@example.com',
+        password: 'Password@123',
+        phone: '+1 555-3333'
+      });
+      const otherBooking = await Booking.create({
+        bookingId: 'HP-BK-OTHER-1234',
+        user: otherUser._id,
+        room: testRoomId,
+        fromdate: new Date('2026-12-01'),
+        todate: new Date('2026-12-05'),
+        totaldays: 4,
+        nightlyPriceSnapshot: 250,
+        totalAmount: 1000,
+        guestName: otherUser.name,
+        guestEmail: otherUser.email,
+        guestPhone: otherUser.phone
+      });
+
+      // Attempt to cancel otherUser's booking using customerToken
+      const cancelRes = await request(app)
+        .post(`/api/bookings/${otherBooking._id}/cancel`)
+        .set('Authorization', `Bearer ${customerToken}`)
+        .send({ reason: 'Malicious cancellation' });
+
+      assert.strictEqual(cancelRes.status, 403);
+      assert.strictEqual(cancelRes.body.success, false);
+    });
+
     console.log('\n======================================================');
     console.log(` Test Suite Complete: ${passedTests} / ${totalTests} Passed`);
     console.log('======================================================\n');
@@ -361,3 +477,4 @@ const runTestSuite = async () => {
 };
 
 runTestSuite();
+

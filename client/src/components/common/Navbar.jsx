@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Hotel, User, LogOut, ShieldCheck, ClipboardCheck, Calendar } from 'lucide-react';
+import api from '../../services/api';
+import { Hotel, User, LogOut, ShieldCheck, ClipboardCheck, Calendar, Bell } from 'lucide-react';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout, isAdmin, isStaff } = useAuth();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.get('/notifications').then(res => {
+        setUnreadNotifications(res.data.unreadCount || 0);
+      }).catch(() => {});
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -69,9 +79,22 @@ const Navbar = () => {
                 </Link>
               </>
             ) : (
-              <div className="dropdown">
-                <button
-                  className="btn btn-outline-warning btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 text-white"
+              <div className="d-flex align-items-center gap-2">
+                <Link
+                  to="/customer"
+                  className="btn btn-outline-secondary btn-sm position-relative text-light border-0"
+                  title="Notifications & Updates"
+                >
+                  <Bell size={18} />
+                  {unreadNotifications > 0 && (
+                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '10px' }}>
+                      {unreadNotifications}
+                    </span>
+                  )}
+                </Link>
+                <div className="dropdown">
+                  <button
+                    className="btn btn-outline-warning btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 text-white"
                   type="button"
                   id="userDropdown"
                   data-bs-toggle="dropdown"
@@ -137,7 +160,8 @@ const Navbar = () => {
                   </li>
                 </ul>
               </div>
-            )}
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -146,3 +170,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

@@ -14,3 +14,4 @@ router.get('/:id', verifyToken, getBookingById);
 router.post('/:id/cancel', verifyToken, cancelBooking);
 
 module.exports = router;
+

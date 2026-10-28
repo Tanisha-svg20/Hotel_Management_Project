@@ -79,3 +79,4 @@ flowchart TD
    - `admin`: Full administrative access (create/edit rooms, view revenue reports, manage user roles, oversee all bookings).
 4. **Mass Assignment Prevention**: Registration strictly forces the public `customer` role on the server regardless of payload inputs.
 5. **Payment Security**: Raw card details or CVVs are never saved on the server; payments rely on provider order/session tokens and webhook signatures.
+

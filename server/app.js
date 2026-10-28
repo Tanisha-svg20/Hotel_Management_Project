@@ -10,6 +10,7 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const staffRoutes = require('./routes/staffRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -45,9 +46,11 @@ app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/staff', staffRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 
 module.exports = app;
+

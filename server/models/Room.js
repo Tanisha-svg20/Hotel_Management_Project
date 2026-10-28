@@ -64,3 +64,4 @@ roomSchema.index({ roomNumber: 1 });
 roomSchema.index({ type: 1, rent: 1 });
 
 module.exports = mongoose.model('Room', roomSchema);
+

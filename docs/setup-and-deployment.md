@@ -108,3 +108,4 @@ cd server
 NODE_ENV=production npm start
 ```
 Use a process manager such as `pm2` or a Docker container for production deployment.
+

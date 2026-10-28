@@ -68,3 +68,4 @@ module.exports = {
   initiatePayment,
   getReceipt
 };
+

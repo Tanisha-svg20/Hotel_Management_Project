@@ -80,3 +80,4 @@ const RoomCard = ({ room, onBookNow }) => {
 };
 
 export default RoomCard;
+

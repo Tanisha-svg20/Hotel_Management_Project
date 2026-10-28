@@ -49,3 +49,4 @@ const serviceRequestSchema = new mongoose.Schema(
 serviceRequestSchema.index({ status: 1, priority: 1 });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);
+
