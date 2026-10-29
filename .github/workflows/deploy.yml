@@ -42,6 +42,7 @@ jobs:
           npm run build
         env:
           VITE_BASE_PATH: '/Hotel_Management_Project/'
+          VITE_API_BASE_URL: 'https://hotelpro-backend-ieoo.onrender.com/api'
 
       - name: Copy index.html to 404.html for SPA routing
         run: cp client/dist/index.html client/dist/404.html
