@@ -30,6 +30,7 @@ build/
 *.local
 
 # Editor and OS
+.sf/
 .vscode/
 .idea/
 *.suo

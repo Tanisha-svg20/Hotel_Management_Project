@@ -18,9 +18,9 @@ if (smtpHost && smtpUser && smtpPass) {
       pass: smtpPass
     }
   });
-  console.log('[EmailService] SMTP transporter configured.');
+  console.log(`[EmailService] SMTP transporter configured for host: ${smtpHost}:${smtpPort}`);
 } else {
-  console.log('[EmailService] SMTP credentials not provided. Using development email logger.');
+  console.log('[EmailService] SMTP credentials not provided (SMTP_HOST, SMTP_USER, SMTP_PASS). Operating in safe Development Email Logger mode.');
 }
 
 /**

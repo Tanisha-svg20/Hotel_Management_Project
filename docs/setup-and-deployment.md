@@ -21,7 +21,60 @@ HotelPro/
 
 ## 3. Local Development Setup
 
-### 3.1 Backend Configuration (`server/`)
+### 3.1 MongoDB Persistence Configuration
+HotelPro connects to MongoDB using Mongoose. The database layer automatically detects your configuration:
+
+1. **Option A: Local MongoDB Service (Persistent)**
+   - Download and install [MongoDB Community Server](https://www.mongodb.com/try/download/community).
+   - Ensure the MongoDB service is running:
+     - On Windows (PowerShell/CMD as Admin):
+       ```powershell
+       net start MongoDB
+       ```
+     - Or start `mongod` manually:
+       ```bash
+       mongod --dbpath "C:\data\db"
+       ```
+   - In `server/.env`, verify:
+     ```env
+     MONGODB_URI=mongodb://127.0.0.1:27017/hotelpro
+     ```
+   - Data is stored permanently in your local MongoDB data directory.
+
+2. **Option B: MongoDB Atlas Cloud Cluster (Persistent)**
+   - Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+   - Under Database Access, create a database user with read/write permissions.
+   - Under Network Access, add `0.0.0.0/0` (or your current IP) to the IP access list.
+   - Click **Connect** -> **Drivers** -> Copy the connection string.
+   - In `server/.env`, set:
+     ```env
+     MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/hotelpro?retryWrites=true&w=majority
+     ```
+
+3. **Option C: In-Memory MongoDB Fallback (Ephemeral Development)**
+   - If no persistent MongoDB instance is reachable at `MONGODB_URI`, the server automatically spins up a singleton in-memory MongoDB instance (`mongodb-memory-server`) for zero-friction evaluation.
+   - **Note on Persistence**: When running in this fallback mode, all database records exist in RAM and reset when the server process terminates. To persist data permanently, configure Option A or Option B.
+
+### 3.2 Email & SMTP Configuration
+The backend includes a transactional email service for booking confirmations, cancellations, and notifications:
+
+1. **Development Logger Mode (Default)**
+   - If `SMTP_HOST`, `SMTP_USER`, or `SMTP_PASS` are left empty, the application runs in safe console logger mode.
+   - Outgoing emails are printed cleanly to the server terminal. No network calls are made and operations never fail due to missing mail server credentials.
+
+2. **Production SMTP Configuration**
+   - To send live emails, configure the following in `server/.env`:
+     ```env
+     SMTP_HOST=smtp.gmail.com
+     SMTP_PORT=587
+     SMTP_USER=your_email@gmail.com
+     SMTP_PASS=your_16_character_app_password
+     EMAIL_FROM="HotelPro Reservations" <reservations@hotelpro.com>
+     ```
+   - For Gmail, use an **App Password** generated under Google Account Security (requires 2-Step Verification).
+   - For development sandbox testing, [Mailtrap](https://mailtrap.io) is recommended (`SMTP_HOST=sandbox.smtp.mailtrap.io`, `SMTP_PORT=2525`).
+
+### 3.3 Backend Setup (`server/`)
 1. Open a terminal and navigate to `server/`:
    ```bash
    cd server
@@ -33,18 +86,6 @@ HotelPro/
 3. Create your `.env` configuration file:
    ```bash
    cp .env.example .env
-   ```
-   Configure the following variables:
-   ```env
-   PORT=8001
-   NODE_ENV=development
-   MONGODB_URI=mongodb://127.0.0.1:27017/hotelpro
-   JWT_SECRET=super_secret_hotelpro_jwt_key_2026
-   CLIENT_URL=http://localhost:5173
-   PAYMENT_PROVIDER=dev_adapter
-   # Optional Stripe Keys:
-   # STRIPE_SECRET_KEY=sk_test_...
-   # STRIPE_PUBLISHABLE_KEY=pk_test_...
    ```
 4. Seed the database with realistic demo hotels, rooms, and test user accounts:
    ```bash

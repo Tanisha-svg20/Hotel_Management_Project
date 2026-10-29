@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require('path');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
+const { getDatabaseInfo } = require('./config/db');
+
 // Route imports
 const authRoutes = require('./routes/authRoutes');
 const roomRoutes = require('./routes/roomRoutes');
@@ -35,7 +37,8 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
     system: 'HotelPro API',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    database: getDatabaseInfo ? getDatabaseInfo() : null
   });
 });
 

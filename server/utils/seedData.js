@@ -1,4 +1,8 @@
+const path = require('path');
+// Ensure environment variables are loaded regardless of current working directory
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 require('dotenv').config();
+
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const Hotel = require('../models/Hotel');
@@ -9,19 +13,48 @@ const Review = require('../models/Review');
 const ServiceRequest = require('../models/ServiceRequest');
 const connectDB = require('../config/db');
 
-const seedDatabase = async () => {
-  try {
-    console.log('[Seed] Connecting to MongoDB...');
-    await connectDB();
+/**
+ * Seeds baseline hotel, rooms, users, and sample operations.
+ * 
+ * @param {boolean|object} [options] 
+ *   - exitOnFinish: whether to terminate process on completion (default: true for CLI, false for programmatic)
+ *   - cleanExisting: whether to wipe collections before inserting (default: true for CLI, false for auto-seed)
+ */
+const seedDatabase = async (options = {}) => {
+  const exitOnFinish = typeof options === 'boolean' ? options : (options.exitOnFinish ?? false);
+  const cleanExisting = typeof options === 'object' && options.cleanExisting !== undefined ? options.cleanExisting : (typeof options === 'boolean' ? options : true);
 
-    console.log('[Seed] Cleaning existing data...');
-    await User.deleteMany();
-    await Hotel.deleteMany();
-    await Room.deleteMany();
-    await Booking.deleteMany();
-    await Payment.deleteMany();
-    await Review.deleteMany();
-    await ServiceRequest.deleteMany();
+  try {
+    // 1. Ensure database connection is active (reuse existing connection if already connected)
+    if (mongoose.connection.readyState !== 1) {
+      console.log('[Seed] Establishing database connection...');
+      await connectDB();
+    } else {
+      console.log('[Seed] Reusing active database connection.');
+    }
+
+    // 2. Clean existing data only if explicitly requested (e.g. manual CLI seed)
+    if (cleanExisting) {
+      if (process.env.NODE_ENV === 'production' && process.env.CONFIRM_PRODUCTION_WIPE !== 'true') {
+        throw new Error('[Seed] Safety Guard: Cannot wipe database in production mode without CONFIRM_PRODUCTION_WIPE=true');
+      }
+      console.log('[Seed] Clearing existing demo collections...');
+      await User.deleteMany();
+      await Hotel.deleteMany();
+      await Room.deleteMany();
+      await Booking.deleteMany();
+      await Payment.deleteMany();
+      await Review.deleteMany();
+      await ServiceRequest.deleteMany();
+    } else {
+      // If auto-seeding without cleanExisting, check if data already exists to prevent duplicate seeding
+      const existingRooms = await Room.countDocuments();
+      if (existingRooms > 0) {
+        console.log(`[Seed] Database already contains ${existingRooms} rooms. Skipping duplicate seeding.`);
+        if (exitOnFinish) process.exit(0);
+        return;
+      }
+    }
 
     console.log('[Seed] Creating Hotel...');
     const hotel = await Hotel.create({
@@ -49,8 +82,8 @@ const seedDatabase = async () => {
       isActive: true
     });
 
-    console.log('[Seed] Creating Users...');
-    // Notice: User model pre-save hook will hash password automatically!
+    console.log('[Seed] Creating Demo Users...');
+    // Password hashing handled automatically by User schema pre-save hook
     const adminUser = await User.create({
       name: 'Alexander Sterling (Admin)',
       email: 'admin@hotelpro.com',
@@ -327,7 +360,15 @@ const seedDatabase = async () => {
       status: 'in_progress'
     });
 
-    console.log('[Seed] Database seeded successfully with demo accounts, rooms, bookings, and operations!');
+    console.log('[Seed] Database seeded successfully with demo records!');
+    console.log('------------------------------------------------------------------------');
+    console.log('Created Seed Records Summary:');
+    console.log('  - Hotel:            1 Resort Profile (HotelPro Grand Resort & Spa)');
+    console.log('  - Users:            3 Accounts (Admin, Staff, Customer)');
+    console.log('  - Rooms:            6 Inventory Units (Single, Double, Deluxe, Suite, etc.)');
+    console.log('  - Bookings:         2 Sample Bookings with Paid Transactions');
+    console.log('  - Reviews:          2 Verified Guest Ratings & Feedback');
+    console.log('  - Service Requests: 1 Amenity Request Assigned to Staff');
     console.log('========================================================================');
     console.log('Demo Login Credentials:');
     console.log('  Admin:    admin@hotelpro.com    / Admin@123');
@@ -339,15 +380,17 @@ const seedDatabase = async () => {
       process.exit(0);
     }
   } catch (error) {
-    console.error('[Seed] Error seeding database:', error);
+    console.error('[Seed] Error seeding database:', error.message || error);
     if (exitOnFinish) {
       process.exit(1);
     }
+    throw error;
   }
 };
 
+// If run directly from command line (npm run seed)
 if (require.main === module) {
-  seedDatabase(true);
+  seedDatabase({ exitOnFinish: true, cleanExisting: true });
 }
 
 module.exports = seedDatabase;

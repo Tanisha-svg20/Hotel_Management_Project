@@ -1,4 +1,8 @@
+const path = require('path');
+// Guarantee that environment variables are loaded regardless of current working directory
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
+
 const app = require('./app');
 const connectDB = require('./config/db');
 
@@ -10,9 +14,11 @@ connectDB().then(async () => {
     const Room = require('./models/Room');
     const roomCount = await Room.countDocuments();
     if (roomCount === 0) {
-      console.log('[Server] No rooms found in database. Initializing default seed data...');
+      console.log('[Server] Database is empty (0 rooms found). Initializing default seed data...');
       const seedDatabase = require('./utils/seedData');
-      await seedDatabase(false);
+      await seedDatabase({ exitOnFinish: false, cleanExisting: false });
+    } else {
+      console.log(`[Server] Database contains ${roomCount} rooms. Skipping auto-seed.`);
     }
   } catch (seedErr) {
     console.warn('[Server] Auto-seed check warning:', seedErr.message);
@@ -26,5 +32,6 @@ connectDB().then(async () => {
     console.log(`====================================================`);
   });
 }).catch(err => {
-  console.error('Failed to start server:', err.message);
+  console.error('\n[Server Fatal] Startup aborted due to database connection error.');
+  process.exit(1);
 });
