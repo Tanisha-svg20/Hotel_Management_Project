@@ -34,7 +34,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename={import.meta.env.BASE_URL}>
         <div className="d-flex flex-column min-vh-100">
           <Navbar />
           <main className="flex-grow-1">
