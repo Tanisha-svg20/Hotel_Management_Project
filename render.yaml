@@ -9,8 +9,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: CLIENT_URL
         value: https://tanisha-svg20.github.io/Hotel_Management_Project
       - key: JWT_SECRET

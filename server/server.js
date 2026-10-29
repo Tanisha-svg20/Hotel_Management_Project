@@ -24,7 +24,7 @@ connectDB().then(async () => {
     console.warn('[Server] Auto-seed check warning:', seedErr.message);
   }
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`====================================================`);
     console.log(` HotelPro Server Running on Port ${PORT}`);
     console.log(` API Endpoint: http://localhost:${PORT}/api`);
