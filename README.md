@@ -1,5 +1,7 @@
 # HotelPro — Full-Stack Hotel Booking & Management Solution
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Tanisha-svg20/Hotel_Management_Project)
+
 HotelPro is an enterprise-grade hospitality reservation and property management web platform built using the **MERN Stack** (MongoDB, Express.js, React.js, and Node.js). It offers a rich, responsive guest experience for discovering luxury rooms, validating real-time availability, and completing bookings, alongside specialized, role-protected management dashboards for hotel front-desk staff and system administrators.
 
 ---
